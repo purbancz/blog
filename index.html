@@ -1,0 +1,256 @@
+<head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Playfair+Display:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+<link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+<link rel="shortcut icon" href="/favicon/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-title" content="BayesianBrain" />
+<link rel="manifest" href="/favicon/site.webmanifest" />
+</head>
+
+<div class="bb-logo">
+  <div id="bb-symbol-host" aria-label="Bayesian Brain symbol"></div>
+
+  <div class="bb-wordmark" aria-label="Bayesian Brain blog">
+    <div class="bb-name">BAYESIAN BRAIN</div>
+    <div class="bb-sub">
+      <span class="bb-line"></span>
+      <span class="bb-blog">blog</span>
+      <span class="bb-line"></span>
+    </div>
+  </div>
+
+  <div id="bb-error" style="display:none; font-family: system-ui; font-size:14px; opacity:.85;"></div>
+</div>
+
+<style>
+  .bb-logo{
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    color: #252a3e;
+  }
+
+  #bb-symbol-host svg{
+    width: min(70vmin, 520px);
+    height: auto;
+    display: block;
+    touch-action: none;
+	margin-bottom: 28px;
+  }
+
+  .bb-name{
+    font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    font-size: clamp(20px, 2.6vw, 40px);
+    text-align: center;
+  }
+
+  .bb-sub{
+    margin-top: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .bb-line{
+    width: min(22vw, 180px);
+    height: 2px;
+    background: currentColor;
+    opacity: 0.9;
+  }
+
+  .bb-blog{
+    font-family: "Playfair Display", Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(14px, 1.4vw, 24px);
+    transform: translateY(2px);
+  }
+</style>
+
+<script>
+(async () => {
+  const host = document.getElementById("bb-symbol-host");
+  const errBox = document.getElementById("bb-error");
+
+  function showError(msg){
+    console.error(msg);
+    errBox.textContent = msg;
+    errBox.style.display = "block";
+  }
+
+  const SVG_URL = "./BB_logo_symbol_solo.svg";
+
+  let svgText = "";
+  try{
+    const res = await fetch(SVG_URL, { cache: "no-cache" });
+    if (!res.ok) throw new Error(`fetch failed: ${res.status} ${res.statusText} (${SVG_URL})`);
+    svgText = await res.text();
+  }catch(e){
+    showError("Nie mogę wczytać SVG. Sprawdź ścieżkę do pliku: " + SVG_URL);
+    return;
+  }
+
+  const doc = new DOMParser().parseFromString(svgText, "image/svg+xml");
+  const svg = doc.documentElement;
+
+  if (svg.nodeName.toLowerCase() !== "svg"){
+    showError("Wczytana odpowiedź nie jest SVG (może 404 zwraca HTML). Sprawdź ścieżkę: " + SVG_URL);
+    return;
+  }
+
+  svg.setAttribute("id", "logo");
+  svg.style.overflow = "visible";
+  host.replaceChildren(svg);
+
+  if (!svg.getAttribute("viewBox")) {
+    const w = Number(svg.getAttribute("width")) || 1000;
+    const h = Number(svg.getAttribute("height")) || 1000;
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  }
+  const [minX, minY, W, H] = svg.getAttribute("viewBox").split(/\s+/).map(Number);
+
+  const paths = [...svg.querySelectorAll("path")];
+  if (!paths.length){
+    showError("SVG nie zawiera <path>. Nie mam czego animować.");
+    return;
+  }
+
+  await new Promise(requestAnimationFrame);
+
+  const NS = "http://www.w3.org/2000/svg";
+  const defs = document.createElementNS(NS, "defs");
+	const PAD = 120; // zwiększ jeśli dalej ucina (np. 160)
+	defs.innerHTML = `
+	  <filter id="repel"
+		x="${minX - PAD}" y="${minY - PAD}"
+		width="${W + PAD*2}" height="${H + PAD*2}"
+		filterUnits="userSpaceOnUse">
+		<feImage id="fieldImg"
+		  x="${minX - PAD}" y="${minY - PAD}"
+		  width="${W + PAD*2}" height="${H + PAD*2}"
+		  href="" result="field"/>
+		<feDisplacementMap in="SourceGraphic" in2="field" scale="30"
+		  xChannelSelector="R" yChannelSelector="G" />
+	  </filter>
+	`;
+  svg.insertBefore(defs, svg.firstChild);
+  
+  const FX = minX - PAD, FY = minY - PAD;
+  const FW = W + PAD*2, FH = H + PAD*2;
+
+
+  const fieldImg = svg.querySelector("#fieldImg");
+  if (!fieldImg){
+    showError("Nie znalazłem #fieldImg w filtrze. Coś usunęło defs?");
+    return;
+  }
+
+  for (const p of paths) {
+    p.setAttribute("filter", "url(#repel)");
+
+    const fill = p.getAttribute("fill");
+    if (!fill || fill === "#000" || fill === "black") {
+      p.setAttribute("fill", "currentColor");
+    }
+  }
+
+  const CW = 256, CH = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = CW; canvas.height = CH;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+  const mouse = {
+    x: minX + W/2, y: minY + H/2,
+    tx: minX + W/2, ty: minY + H/2,
+    active: false
+  };
+  let effect = 0;
+
+  function svgPointFromClient(clientX, clientY) {
+    const pt = svg.createSVGPoint();
+    pt.x = clientX; pt.y = clientY;
+    const m = svg.getScreenCTM();
+    return m ? pt.matrixTransform(m.inverse()) : { x: minX + W/2, y: minY + H/2 };
+  }
+
+  svg.addEventListener("pointermove", (e) => {
+    const p = svgPointFromClient(e.clientX, e.clientY);
+    mouse.tx = p.x; mouse.ty = p.y;
+    mouse.active = true;
+  });
+  svg.addEventListener("pointerleave", () => { mouse.active = false; });
+
+  // Tune
+  const radius = 140;
+  const strength = 80;
+  const follow = 0.18;
+  const fade = 0.12;
+
+  function setFeImageHref(value){
+    fieldImg.setAttribute("href", value);
+    fieldImg.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", value);
+  }
+
+  function drawField() {
+    if (mouse.active) {
+      mouse.x += (mouse.tx - mouse.x) * follow;
+      mouse.y += (mouse.ty - mouse.y) * follow;
+    }
+
+    const target = mouse.active ? 1 : 0;
+    effect += (target - effect) * fade;
+    const localStrength = strength * effect;
+
+    const img = ctx.createImageData(CW, CH);
+    const data = img.data;
+
+    for (let y = 0; y < CH; y++) {
+      for (let x = 0; x < CW; x++) {
+        const i = (y * CW + x) * 4;
+
+		const sx = FX + (x + 0.5) * (FW / CW);
+		const sy = FY + (y + 0.5) * (FH / CH);
+
+        const dx = sx - mouse.x;
+        const dy = sy - mouse.y;
+        const dist = Math.hypot(dx, dy) || 1;
+
+        let r = 128, g = 128;
+
+        if (localStrength > 0.001 && dist < radius) {
+          const t = 1 - (dist / radius);
+          const f = t * t;
+          const nx = dx / dist;
+          const ny = dy / dist;
+          r = 128 + nx * localStrength * f;
+          g = 128 + ny * localStrength * f;
+        }
+
+        data[i]   = r < 0 ? 0 : (r > 255 ? 255 : r);
+        data[i+1] = g < 0 ? 0 : (g > 255 ? 255 : g);
+        data[i+2] = 128;
+        data[i+3] = 255;
+      }
+    }
+
+    ctx.putImageData(img, 0, 0);
+    setFeImageHref(canvas.toDataURL("image/png"));
+  }
+
+  function tick(){
+    drawField();
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>

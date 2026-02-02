@@ -82,6 +82,31 @@
   const host = document.getElementById("bb-symbol-host");
   const errBox = document.getElementById("bb-error");
 
+  // --- i18n (default: English) ---
+  const LANG = (document.documentElement.lang || navigator.language || "en").slice(0,2);
+  const MESSAGES = {
+    en: {
+      loadSvgFail: (url) => `Can't load SVG. Check the file path: ${url}`,
+      notSvg: (url) => `The fetched response is not an SVG (maybe a 404 returned HTML). Check the path: ${url}`,
+      noPath: `SVG contains no <path> elements. Nothing to animate.`,
+      noFieldImg: `Couldn't find #fieldImg in the filter. Did something remove <defs>?`,
+      fetchFailed: (status, statusText, url) => `Fetch failed: ${status} ${statusText} (${url})`
+    },
+    pl: {
+      loadSvgFail: (url) => `Nie mogę wczytać SVG. Sprawdź ścieżkę do pliku: ${url}`,
+      notSvg: (url) => `Wczytana odpowiedź nie jest SVG (może 404 zwraca HTML). Sprawdź ścieżkę: ${url}`,
+      noPath: `SVG nie zawiera <path>. Nie mam czego animować.`,
+      noFieldImg: `Nie znalazłem #fieldImg w filtrze. Coś usunęło defs?`,
+      fetchFailed: (status, statusText, url) => `fetch failed: ${status} ${statusText} (${url})`
+    }
+  };
+
+  const t = (key, ...args) => {
+    const dict = MESSAGES[LANG] || MESSAGES.en;
+    const val = dict[key] ?? MESSAGES.en[key];
+    return typeof val === "function" ? val(...args) : val;
+  };
+
   function showError(msg){
     console.error(msg);
     errBox.textContent = msg;
@@ -93,10 +118,12 @@
   let svgText = "";
   try{
     const res = await fetch(SVG_URL, { cache: "no-cache" });
-    if (!res.ok) throw new Error(`fetch failed: ${res.status} ${res.statusText} (${SVG_URL})`);
+    if (!res.ok) throw new Error(t("fetchFailed", res.status, res.statusText, SVG_URL));
     svgText = await res.text();
   }catch(e){
-    showError("Nie mogę wczytać SVG. Sprawdź ścieżkę do pliku: " + SVG_URL);
+    // show a friendly EN message, but still log the real error object
+    console.error(e);
+    showError(t("loadSvgFail", SVG_URL));
     return;
   }
 
@@ -104,7 +131,7 @@
   const svg = doc.documentElement;
 
   if (svg.nodeName.toLowerCase() !== "svg"){
-    showError("Wczytana odpowiedź nie jest SVG (może 404 zwraca HTML). Sprawdź ścieżkę: " + SVG_URL);
+    showError(t("notSvg", SVG_URL));
     return;
   }
 
@@ -121,7 +148,7 @@
 
   const paths = [...svg.querySelectorAll("path")];
   if (!paths.length){
-    showError("SVG nie zawiera <path>. Nie mam czego animować.");
+    showError(t("noPath"));
     return;
   }
 
@@ -129,35 +156,33 @@
 
   const NS = "http://www.w3.org/2000/svg";
   const defs = document.createElementNS(NS, "defs");
-	const PAD = 120; // zwiększ jeśli dalej ucina (np. 160)
-	defs.innerHTML = `
-	  <filter id="repel"
-		x="${minX - PAD}" y="${minY - PAD}"
-		width="${W + PAD*2}" height="${H + PAD*2}"
-		filterUnits="userSpaceOnUse">
-		<feImage id="fieldImg"
-		  x="${minX - PAD}" y="${minY - PAD}"
-		  width="${W + PAD*2}" height="${H + PAD*2}"
-		  href="" result="field"/>
-		<feDisplacementMap in="SourceGraphic" in2="field" scale="30"
-		  xChannelSelector="R" yChannelSelector="G" />
-	  </filter>
-	`;
+  const PAD = 120;
+  defs.innerHTML = `
+    <filter id="repel"
+      x="${minX - PAD}" y="${minY - PAD}"
+      width="${W + PAD*2}" height="${H + PAD*2}"
+      filterUnits="userSpaceOnUse">
+      <feImage id="fieldImg"
+        x="${minX - PAD}" y="${minY - PAD}"
+        width="${W + PAD*2}" height="${H + PAD*2}"
+        href="" result="field"/>
+      <feDisplacementMap in="SourceGraphic" in2="field" scale="30"
+        xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  `;
   svg.insertBefore(defs, svg.firstChild);
-  
+
   const FX = minX - PAD, FY = minY - PAD;
   const FW = W + PAD*2, FH = H + PAD*2;
 
-
   const fieldImg = svg.querySelector("#fieldImg");
   if (!fieldImg){
-    showError("Nie znalazłem #fieldImg w filtrze. Coś usunęło defs?");
+    showError(t("noFieldImg"));
     return;
   }
 
   for (const p of paths) {
     p.setAttribute("filter", "url(#repel)");
-
     const fill = p.getAttribute("fill");
     if (!fill || fill === "#000" || fill === "black") {
       p.setAttribute("fill", "currentColor");
@@ -190,7 +215,6 @@
   });
   svg.addEventListener("pointerleave", () => { mouse.active = false; });
 
-  // Tune
   const radius = 140;
   const strength = 80;
   const follow = 0.18;
@@ -218,8 +242,8 @@
       for (let x = 0; x < CW; x++) {
         const i = (y * CW + x) * 4;
 
-		const sx = FX + (x + 0.5) * (FW / CW);
-		const sy = FY + (y + 0.5) * (FH / CH);
+        const sx = FX + (x + 0.5) * (FW / CW);
+        const sy = FY + (y + 0.5) * (FH / CH);
 
         const dx = sx - mouse.x;
         const dy = sy - mouse.y;
@@ -254,3 +278,4 @@
   requestAnimationFrame(tick);
 })();
 </script>
+

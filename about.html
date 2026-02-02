@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>About me — BayesianBrain</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Playfair+Display:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+	<link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="BayesianBrain" />
+  <link rel="manifest" href="/favicon/site.webmanifest" />
+<style>
+  /* Safety (optional but consistent with index.html) */
+  [hidden] { display: none !important; }
+
+  :root{
+    --bb-ink: #252a3e;
+    --bb-ui: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --bb-serif: "Playfair Display", Georgia, serif;
+    --bb-body: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+
+  body{
+    margin: 0;
+    color: var(--bb-ink);
+    background: #fff;
+    font-family: var(--bb-body);
+  }
+
+  /* --- NAV BAR --- */
+  .bb-nav{
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    box-sizing: border-box;
+  }
+
+  .bb-nav__brand{
+    text-decoration: none;
+    color: inherit;
+    font-family: var(--bb-ui);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-size: 14px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .bb-brand__icon{
+    width: 18px;
+    height: 18px;
+    display: block;
+  }
+
+  /* --- BURGER --- */
+  .bb-burger{
+    width: 44px; height: 44px;
+    border: 0; background: transparent;
+    cursor: pointer;
+    display: grid;
+    align-content: center;
+    gap: 6px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bb-burger__line{
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--bb-ink);
+    border-radius: 999px;
+    margin-left: auto;
+  }
+
+  /* --- OVERLAY (animated) --- */
+  .bb-overlay{
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0,0,0,0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+  }
+
+  /* --- MENU (animated) --- */
+  .bb-menu{
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: min(84vw, 320px);
+    z-index: 70;
+
+    background: #fff;
+    box-shadow: -18px 0 40px rgba(0,0,0,0.18);
+    padding: 18px;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    transform: translateX(105%);
+    transition: transform 260ms cubic-bezier(.2,.8,.2,1);
+    will-change: transform;
+  }
+
+  /* Open state */
+  body.menu-open .bb-overlay{
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body.menu-open .bb-menu{
+    transform: translateX(0);
+  }
+
+  /* Lock scroll while open */
+  body.menu-open{
+    overflow: hidden;
+  }
+
+  .bb-menu__close{
+    align-self: flex-end;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 28px;
+    line-height: 1;
+    padding: 10px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bb-menu__link{
+    text-decoration: none;
+    color: inherit;
+    font-family: var(--bb-ui);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 12px 10px;
+    border-radius: 12px;
+  }
+  .bb-menu__link:hover{ background: rgba(37,42,62,0.06); }
+
+  /* Optional subtle item entrance polish */
+  .bb-menu > *{
+    opacity: 0;
+    transform: translateX(8px);
+    transition: opacity 180ms ease, transform 260ms cubic-bezier(.2,.8,.2,1);
+  }
+  body.menu-open .bb-menu > *{
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Reduced motion accessibility */
+  @media (prefers-reduced-motion: reduce){
+    .bb-overlay, .bb-menu, .bb-menu > * { transition: none !important; }
+  }
+
+  /* --- PAGE LAYOUT --- */
+  main{
+    padding-top: 78px; /* below fixed nav */
+    max-width: 980px;
+    margin: 0 auto;
+    padding-left: 18px;
+    padding-right: 18px;
+    box-sizing: border-box;
+  }
+
+  .hero{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 26px 0 10px;
+    align-items: center;
+  }
+
+  @media (min-width: 860px){
+    .hero{
+      grid-template-columns: 360px 1fr;
+      gap: 34px;
+    }
+  }
+
+  .hero__photo{
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: 22px;
+    background: rgba(0,0,0,0.05);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.10);
+  }
+
+  h1{
+    margin: 0 0 10px;
+    font-family: var(--bb-ui);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-size: clamp(28px, 3.4vw, 44px);
+  }
+
+  .subtitle{
+    font-family: var(--bb-serif);
+    font-weight: 400;
+    font-size: clamp(16px, 1.6vw, 20px);
+    opacity: 0.9;
+    margin: 0 0 14px;
+    line-height: 1.55;
+  }
+
+  .bio{
+    max-width: 62ch;
+    line-height: 1.7;
+    font-size: 16px;
+    opacity: 0.95;
+    margin: 0 0 12px;
+  }
+
+  /* Use this instead of "bio-smaller": class="bio bio--small" */
+  .bio.bio--small{
+    max-width: 68ch;
+    font-size: 14px;
+  }
+
+  /* Focus styling (clean, keyboard-only) */
+  .bb-burger,
+  .bb-menu__close,
+  .bb-menu__link{
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bb-burger:focus-visible,
+  .bb-menu__close:focus-visible,
+  .bb-menu__link:focus-visible{
+    outline: 2px solid rgba(37,42,62,0.35);
+    outline-offset: 4px;
+    border-radius: 12px;
+  }
+
+  .bb-menu__close:focus-visible{
+    border-radius: 999px;
+  }
+
+  /* Bio link styling */
+  .bio a{
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: rgba(37,42,62,0.35);
+    text-underline-offset: 3px;
+  }
+  .bio a:hover{
+    text-decoration-color: currentColor;
+  }
+
+  /* Socials */
+  .socials{
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    opacity: 0.8;
+  }
+
+  .socials a{
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .icon{
+    width: 20px;
+    height: 20px;
+    display: block;
+  }
+
+  .socials a:hover{
+    opacity: 1;
+  }
+</style>
+
+</head>
+
+<body>
+<header class="bb-nav" aria-label="Site navigation">
+  <a class="bb-nav__brand" href="index.html" aria-label="Go to Home">
+    <img class="bb-brand__icon" src="./BB_logo_symbol_solo.svg" alt="" aria-hidden="true" />
+    <span>BAYESIAN BRAIN</span>
+  </a>
+
+  <button
+    class="bb-burger"
+    type="button"
+    aria-label="Open menu"
+    aria-expanded="false"
+    aria-controls="bb-menu"
+    data-menu
+  >
+    <span class="bb-burger__line"></span>
+    <span class="bb-burger__line"></span>
+    <span class="bb-burger__line"></span>
+  </button>
+</header>
+
+
+  <!-- No hidden: animated via opacity + pointer-events -->
+  <div class="bb-overlay" data-close></div>
+
+  <!-- No hidden: animated via transform -->
+  <nav id="bb-menu" class="bb-menu" aria-hidden="true">
+    <button class="bb-menu__close" type="button" aria-label="Close menu" data-close>&times;</button>
+    <a class="bb-menu__link" href="index.html">Home</a>
+    <a class="bb-menu__link" href="about.html">About me</a>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <img class="hero__photo" src="images/Piotr_Urbanczyk_1070x1070x72.jpg" alt="Photo of Piotr Urbańczyk" />
+
+      <div>
+        <h1>About me</h1>
+		<p class="subtitle">
+		  I write about data, logic, code, and philosophy.
+		</p>
+
+		<p class="bio">
+		  Hi! I’m <strong>Piotr Urbańczyk</strong> — a computer scientist by training, 
+		  with a background in data science, cognitive science, and philosophy.
+		</p>
+
+		<p class="bio">
+		  Since 2009 I’ve been closely involved with the 
+		  <a href="https://www.copernicuscenter.edu.pl/en/" target="_blank" rel="noopener">
+			Copernicus Center for Interdisciplinary Studies
+		  </a> (now
+		  at the 
+		  <a href="https://ckbi.uj.edu.pl/start" target="_blank" rel="noopener">
+			Jagiellonian University
+		  </a>). More recently, I’ve worked with the 
+		  <a href="https://www.agh.edu.pl/en" target="_blank" rel="noopener">
+			AGH University of Krakow</a>’s
+			<a href="https://www.ctb.agh.edu.pl/en/" target="_blank" rel="noopener">Center for Security Technologies
+		  </a>, contributing to software used by state security institutions.
+		</p>
+
+		<p class="bio">
+		  This blog is where I share the notes, small experiments, careful explanations, and the kind of reasoning I wish I had encountered earlier.
+		  <!-- 
+		  If you enjoy practical intuition, tiny demos, and honest trade-offs, you’ll feel at home here.
+		  -->
+		</p>
+
+
+		<!-- 
+        <div class="chips" aria-label="Topics">
+			<span class="chip">Computer Science</span>
+			<span class="chip">Data Science</span>
+			<span class="chip">Cognitive Science</span>
+			<span class="chip">Philosophy</span>
+        </div>
+		-->
+		
+		<div class="socials" aria-label="Profiles and work">
+		  <!-- GitHub -->
+		  <a href="https://github.com/purbancz" target="_blank" rel="noopener" aria-label="GitHub">
+			<svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+			  <path fill="currentColor"
+				d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 008 10.95c.6.1.82-.26.82-.58
+				0-.28-.01-1.02-.02-2-3.25.71-3.94-1.56-3.94-1.56-.53-1.34-1.3-1.7-1.3-1.7
+				-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.73 1.26
+				3.4.97.1-.76.4-1.27.73-1.56-2.6-.3-5.34-1.3-5.34-5.77
+				0-1.27.45-2.3 1.2-3.12-.12-.3-.52-1.52.12-3.16 0 0 .98-.31 3.2 1.19a11.1
+				11.1 0 015.84 0c2.22-1.5 3.2-1.19 3.2-1.19.64 1.64.24 2.86.12 3.16.75.82
+				1.2 1.85 1.2 3.12 0 4.48-2.74 5.47-5.35 5.76.42.36.8 1.08.8 2.18
+				0 1.57-.01 2.84-.01 3.22 0 .32.21.69.83.57A11.5 11.5 0 0023.5 12
+				C23.5 5.65 18.35.5 12 .5z"/>
+			</svg>
+		  </a>
+
+		  <!-- LinkedIn -->
+		  <a href="https://linkedin.com/in/piotr-urbanczyk" target="_blank" rel="noopener" aria-label="LinkedIn">
+			<svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+			  <path fill="currentColor"
+				d="M4.98 3.5C3.33 3.5 2 4.82 2 6.47c0 1.64 1.33 2.97 2.98 2.97
+				1.65 0 2.98-1.33 2.98-2.97C7.96 4.82 6.63 3.5 4.98 3.5zM2.4
+				21.5h5.17V8.98H2.4V21.5zM9.34 8.98V21.5h5.17v-6.54c0-3.48
+				4.53-3.76 4.53 0V21.5h5.17v-7.89c0-6.15-6.68-5.93-9.7-2.9V8.98H9.34z"/>
+			</svg>
+		  </a>
+
+		  <!-- CV (Home icon) -->
+		  <a href="#" aria-label="CV / personal page">
+			<svg viewBox="0 0 24 24" class="icon" aria-hidden="true">
+			  <path fill="currentColor"
+				d="M12 2.1L1 12h3v9h6v-7h4v7h6v-9h3L12 2.1z"/>
+			</svg>
+		  </a>
+		</div>
+
+      </div>
+    </section>
+  </main>
+
+<script>
+(() => {
+  const burger = document.querySelector("[data-menu]") || document.querySelector(".bb-burger");
+  const menu = document.getElementById("bb-menu");
+  const closeTargets = document.querySelectorAll("[data-close]");
+
+  if (!burger || !menu) return;
+
+  const OPEN_CLASS = "menu-open";
+  const isOpen = () => document.body.classList.contains(OPEN_CLASS);
+
+  function openMenu(){
+    document.body.classList.add(OPEN_CLASS);
+    burger.setAttribute("aria-expanded", "true");
+    menu.setAttribute("aria-hidden", "false");
+
+    const first = menu.querySelector("a, button, [tabindex]:not([tabindex='-1'])");
+    first && first.focus();
+  }
+
+  // note the parameter
+  function closeMenu({ focusBurger = true } = {}){
+    document.body.classList.remove(OPEN_CLASS);
+    burger.setAttribute("aria-expanded", "false");
+    menu.setAttribute("aria-hidden", "true");
+
+    if (focusBurger) burger.focus();
+  }
+
+  burger.addEventListener("click", () => {
+    isOpen() ? closeMenu() : openMenu();
+  });
+
+  closeTargets.forEach(el => el.addEventListener("click", () => closeMenu()));
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && isOpen()) closeMenu();
+  });
+
+  // Initial state: close WITHOUT focusing the burger (prevents ring on refresh)
+  closeMenu({ focusBurger: false });
+})();
+</script>
+
+</body>
+</html>

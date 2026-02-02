@@ -1,34 +1,234 @@
+<!doctype html>
+<html lang="en">
 <head>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-  href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Playfair+Display:wght@400;500&display=swap"
-  rel="stylesheet"
-/>
-<link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
-<link rel="shortcut icon" href="/favicon/favicon.ico" />
-<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
-<meta name="apple-mobile-web-app-title" content="BayesianBrain" />
-<link rel="manifest" href="/favicon/site.webmanifest" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Playfair+Display:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="BayesianBrain" />
+  <link rel="manifest" href="/favicon/site.webmanifest" />
 </head>
 
-<div class="bb-logo">
-  <div id="bb-symbol-host" aria-label="Bayesian Brain symbol"></div>
+<body>
+<header class="bb-nav bb-nav--minimal" aria-label="Site navigation">
+  <button
+    class="bb-burger"
+    type="button"
+    aria-label="Open menu"
+    aria-expanded="false"
+    aria-controls="bb-menu"
+    data-menu
+  >
+    <span class="bb-burger__line"></span>
+    <span class="bb-burger__line"></span>
+    <span class="bb-burger__line"></span>
+  </button>
+</header>
 
-  <div class="bb-wordmark" aria-label="Bayesian Brain blog">
-    <div class="bb-name">BAYESIAN BRAIN</div>
-    <div class="bb-sub">
-      <span class="bb-line"></span>
-      <span class="bb-blog">blog</span>
-      <span class="bb-line"></span>
+  <!-- IMPORTANT: no "hidden" here (we animate opacity + pointer-events) -->
+  <div class="bb-overlay" data-close></div>
+
+  <!-- IMPORTANT: no "hidden" here (we animate transform) -->
+  <nav id="bb-menu" class="bb-menu" aria-hidden="true">
+    <button class="bb-menu__close" type="button" aria-label="Close menu" data-close>&times;</button>
+
+    <a class="bb-menu__link" href="index.html">Home</a>
+    <a class="bb-menu__link" href="about.html">About me</a>
+  </nav>
+
+  <div class="bb-logo">
+    <div id="bb-symbol-host" aria-label="Bayesian Brain symbol"></div>
+
+    <div class="bb-wordmark" aria-label="Bayesian Brain blog">
+      <div class="bb-name">BAYESIAN BRAIN</div>
+      <div class="bb-sub">
+        <span class="bb-line"></span>
+        <span class="bb-blog">blog</span>
+        <span class="bb-line"></span>
+      </div>
     </div>
+
+    <div id="bb-error" style="display:none; font-family: system-ui; font-size:14px; opacity:.85;"></div>
   </div>
 
-  <div id="bb-error" style="display:none; font-family: system-ui; font-size:14px; opacity:.85;"></div>
-</div>
+  <style>
+  /* Safety */
+  [hidden] { display: none !important; }
 
-<style>
+  :root{
+    --bb-ink: #252a3e;
+  }
+
+  /* ===== NAV (Base) ===== */
+  .bb-nav{
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    /* match “about page” feel */
+    padding: 14px 18px;
+
+    /* default (about page can keep its bar if you want) */
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+
+    box-sizing: border-box;
+  }
+
+  /* Home-only minimal variant */
+  .bb-nav--minimal{
+    /* keep positioning/padding identical, only remove visual bar */
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 0;
+
+    /* align burger to the right */
+    justify-content: flex-end;
+  }
+
+  /* ===== BURGER ===== */
+  .bb-burger{
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+
+    display: grid;
+    align-content: center;
+    gap: 6px;
+
+    -webkit-tap-highlight-color: transparent; /* mobile */
+  }
+
+  .bb-burger__line{
+    display: block;
+    width: 22px;
+    height: 2px;
+
+    /* make sure it’s visible */
+    background: var(--bb-ink);
+
+    border-radius: 999px;
+    margin-left: auto;
+  }
+
+  /* Optional: increase contrast/visibility on very light backgrounds */
+  .bb-burger:hover .bb-burger__line{
+    opacity: 0.9;
+  }
+
+  /* ===== OVERLAY (animated) ===== */
+  .bb-overlay{
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0,0,0,0.35);
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+  }
+
+  /* ===== MENU (animated) ===== */
+  .bb-menu{
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: min(84vw, 320px);
+    z-index: 70;
+
+    background: #fff;
+    box-shadow: -18px 0 40px rgba(0,0,0,0.18);
+    padding: 18px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    transform: translateX(105%);
+    transition: transform 260ms cubic-bezier(.2,.8,.2,1);
+    will-change: transform;
+
+    box-sizing: border-box;
+  }
+
+  /* Open state */
+  body.menu-open .bb-overlay{
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body.menu-open .bb-menu{
+    transform: translateX(0);
+  }
+
+  /* Lock scroll while open */
+  body.menu-open{
+    overflow: hidden;
+  }
+
+  .bb-menu__close{
+    align-self: flex-end;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+
+    font-size: 28px;
+    line-height: 1;
+    padding: 10px;
+
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bb-menu__link{
+    text-decoration: none;
+    color: var(--bb-ink);
+
+    font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+
+    padding: 12px 10px;
+    border-radius: 12px;
+  }
+  .bb-menu__link:hover{
+    background: rgba(37,42,62,0.06);
+  }
+
+  /* Optional subtle item entrance polish */
+  .bb-menu > *{
+    opacity: 0;
+    transform: translateX(8px);
+    transition: opacity 180ms ease, transform 260ms cubic-bezier(.2,.8,.2,1);
+  }
+  body.menu-open .bb-menu > *{
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    .bb-overlay, .bb-menu, .bb-menu > *{ transition: none !important; }
+  }
+
+  /* ===== LOGO AREA (unchanged, tiny tweak optional) ===== */
   .bb-logo{
     min-height: 100vh;
     display: flex;
@@ -36,7 +236,11 @@
     align-items: center;
     justify-content: center;
     gap: 18px;
-    color: #252a3e;
+    color: var(--bb-ink);
+
+    /* Optional: since the header is minimal, you can reduce this a bit */
+    padding-top: 48px;
+    box-sizing: border-box;
   }
 
   #bb-symbol-host svg{
@@ -44,7 +248,7 @@
     height: auto;
     display: block;
     touch-action: none;
-	margin-bottom: 28px;
+    margin-bottom: 28px;
   }
 
   .bb-name{
@@ -75,207 +279,272 @@
     font-size: clamp(14px, 1.4vw, 24px);
     transform: translateY(2px);
   }
+
+  /* ===== Focus styling (clean, keyboard-only) ===== */
+  .bb-burger,
+  .bb-menu__close,
+  .bb-menu__link{
+    outline: none;
+  }
+
+  .bb-burger:focus-visible,
+  .bb-menu__close:focus-visible,
+  .bb-menu__link:focus-visible{
+    outline: 2px solid rgba(37,42,62,0.35);
+    outline-offset: 4px;
+    border-radius: 12px;
+  }
+
+  .bb-menu__close:focus-visible{
+    border-radius: 999px;
+  }
 </style>
 
+
 <script>
-(async () => {
-  const host = document.getElementById("bb-symbol-host");
-  const errBox = document.getElementById("bb-error");
+(() => {
+  const burger = document.querySelector("[data-menu]") || document.querySelector(".bb-burger");
+  const menu = document.getElementById("bb-menu");
+  const closeTargets = document.querySelectorAll("[data-close]");
 
-  // --- i18n (default: English) ---
-  const LANG = (document.documentElement.lang || navigator.language || "en").slice(0,2);
-  const MESSAGES = {
-    en: {
-      loadSvgFail: (url) => `Can't load SVG. Check the file path: ${url}`,
-      notSvg: (url) => `The fetched response is not an SVG (maybe a 404 returned HTML). Check the path: ${url}`,
-      noPath: `SVG contains no <path> elements. Nothing to animate.`,
-      noFieldImg: `Couldn't find #fieldImg in the filter. Did something remove <defs>?`,
-      fetchFailed: (status, statusText, url) => `Fetch failed: ${status} ${statusText} (${url})`
-    },
-    pl: {
-      loadSvgFail: (url) => `Nie mogę wczytać SVG. Sprawdź ścieżkę do pliku: ${url}`,
-      notSvg: (url) => `Wczytana odpowiedź nie jest SVG (może 404 zwraca HTML). Sprawdź ścieżkę: ${url}`,
-      noPath: `SVG nie zawiera <path>. Nie mam czego animować.`,
-      noFieldImg: `Nie znalazłem #fieldImg w filtrze. Coś usunęło defs?`,
-      fetchFailed: (status, statusText, url) => `fetch failed: ${status} ${statusText} (${url})`
-    }
-  };
+  if (!burger || !menu) return;
 
-  const t = (key, ...args) => {
-    const dict = MESSAGES[LANG] || MESSAGES.en;
-    const val = dict[key] ?? MESSAGES.en[key];
-    return typeof val === "function" ? val(...args) : val;
-  };
+  const OPEN_CLASS = "menu-open";
+  const isOpen = () => document.body.classList.contains(OPEN_CLASS);
 
-  function showError(msg){
-    console.error(msg);
-    errBox.textContent = msg;
-    errBox.style.display = "block";
+  function openMenu(){
+    document.body.classList.add(OPEN_CLASS);
+    burger.setAttribute("aria-expanded", "true");
+    menu.setAttribute("aria-hidden", "false");
+
+    const first = menu.querySelector("a, button, [tabindex]:not([tabindex='-1'])");
+    first && first.focus();
   }
 
-  const SVG_URL = "./BB_logo_symbol_solo.svg";
+  // note the parameter
+  function closeMenu({ focusBurger = true } = {}){
+    document.body.classList.remove(OPEN_CLASS);
+    burger.setAttribute("aria-expanded", "false");
+    menu.setAttribute("aria-hidden", "true");
 
-  let svgText = "";
-  try{
-    const res = await fetch(SVG_URL, { cache: "no-cache" });
-    if (!res.ok) throw new Error(t("fetchFailed", res.status, res.statusText, SVG_URL));
-    svgText = await res.text();
-  }catch(e){
-    // show a friendly EN message, but still log the real error object
-    console.error(e);
-    showError(t("loadSvgFail", SVG_URL));
-    return;
+    if (focusBurger) burger.focus();
   }
 
-  const doc = new DOMParser().parseFromString(svgText, "image/svg+xml");
-  const svg = doc.documentElement;
-
-  if (svg.nodeName.toLowerCase() !== "svg"){
-    showError(t("notSvg", SVG_URL));
-    return;
-  }
-
-  svg.setAttribute("id", "logo");
-  svg.style.overflow = "visible";
-  host.replaceChildren(svg);
-
-  if (!svg.getAttribute("viewBox")) {
-    const w = Number(svg.getAttribute("width")) || 1000;
-    const h = Number(svg.getAttribute("height")) || 1000;
-    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
-  }
-  const [minX, minY, W, H] = svg.getAttribute("viewBox").split(/\s+/).map(Number);
-
-  const paths = [...svg.querySelectorAll("path")];
-  if (!paths.length){
-    showError(t("noPath"));
-    return;
-  }
-
-  await new Promise(requestAnimationFrame);
-
-  const NS = "http://www.w3.org/2000/svg";
-  const defs = document.createElementNS(NS, "defs");
-  const PAD = 120;
-  defs.innerHTML = `
-    <filter id="repel"
-      x="${minX - PAD}" y="${minY - PAD}"
-      width="${W + PAD*2}" height="${H + PAD*2}"
-      filterUnits="userSpaceOnUse">
-      <feImage id="fieldImg"
-        x="${minX - PAD}" y="${minY - PAD}"
-        width="${W + PAD*2}" height="${H + PAD*2}"
-        href="" result="field"/>
-      <feDisplacementMap in="SourceGraphic" in2="field" scale="30"
-        xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-  `;
-  svg.insertBefore(defs, svg.firstChild);
-
-  const FX = minX - PAD, FY = minY - PAD;
-  const FW = W + PAD*2, FH = H + PAD*2;
-
-  const fieldImg = svg.querySelector("#fieldImg");
-  if (!fieldImg){
-    showError(t("noFieldImg"));
-    return;
-  }
-
-  for (const p of paths) {
-    p.setAttribute("filter", "url(#repel)");
-    const fill = p.getAttribute("fill");
-    if (!fill || fill === "#000" || fill === "black") {
-      p.setAttribute("fill", "currentColor");
-    }
-  }
-
-  const CW = 256, CH = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = CW; canvas.height = CH;
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-  const mouse = {
-    x: minX + W/2, y: minY + H/2,
-    tx: minX + W/2, ty: minY + H/2,
-    active: false
-  };
-  let effect = 0;
-
-  function svgPointFromClient(clientX, clientY) {
-    const pt = svg.createSVGPoint();
-    pt.x = clientX; pt.y = clientY;
-    const m = svg.getScreenCTM();
-    return m ? pt.matrixTransform(m.inverse()) : { x: minX + W/2, y: minY + H/2 };
-  }
-
-  svg.addEventListener("pointermove", (e) => {
-    const p = svgPointFromClient(e.clientX, e.clientY);
-    mouse.tx = p.x; mouse.ty = p.y;
-    mouse.active = true;
+  burger.addEventListener("click", () => {
+    isOpen() ? closeMenu() : openMenu();
   });
-  svg.addEventListener("pointerleave", () => { mouse.active = false; });
 
-  const radius = 140;
-  const strength = 80;
-  const follow = 0.18;
-  const fade = 0.12;
+  closeTargets.forEach(el => el.addEventListener("click", () => closeMenu()));
 
-  function setFeImageHref(value){
-    fieldImg.setAttribute("href", value);
-    fieldImg.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", value);
-  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && isOpen()) closeMenu();
+  });
 
-  function drawField() {
-    if (mouse.active) {
-      mouse.x += (mouse.tx - mouse.x) * follow;
-      mouse.y += (mouse.ty - mouse.y) * follow;
-    }
-
-    const target = mouse.active ? 1 : 0;
-    effect += (target - effect) * fade;
-    const localStrength = strength * effect;
-
-    const img = ctx.createImageData(CW, CH);
-    const data = img.data;
-
-    for (let y = 0; y < CH; y++) {
-      for (let x = 0; x < CW; x++) {
-        const i = (y * CW + x) * 4;
-
-        const sx = FX + (x + 0.5) * (FW / CW);
-        const sy = FY + (y + 0.5) * (FH / CH);
-
-        const dx = sx - mouse.x;
-        const dy = sy - mouse.y;
-        const dist = Math.hypot(dx, dy) || 1;
-
-        let r = 128, g = 128;
-
-        if (localStrength > 0.001 && dist < radius) {
-          const t = 1 - (dist / radius);
-          const f = t * t;
-          const nx = dx / dist;
-          const ny = dy / dist;
-          r = 128 + nx * localStrength * f;
-          g = 128 + ny * localStrength * f;
-        }
-
-        data[i]   = r < 0 ? 0 : (r > 255 ? 255 : r);
-        data[i+1] = g < 0 ? 0 : (g > 255 ? 255 : g);
-        data[i+2] = 128;
-        data[i+3] = 255;
-      }
-    }
-
-    ctx.putImageData(img, 0, 0);
-    setFeImageHref(canvas.toDataURL("image/png"));
-  }
-
-  function tick(){
-    drawField();
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
+  // Initial state: close WITHOUT focusing the burger (prevents ring on refresh)
+  closeMenu({ focusBurger: false });
 })();
 </script>
 
+
+  <!-- YOUR EXISTING SVG SCRIPT (unchanged) -->
+  <script>
+  (async () => {
+    const host = document.getElementById("bb-symbol-host");
+    const errBox = document.getElementById("bb-error");
+
+    const LANG = (document.documentElement.lang || navigator.language || "en").slice(0,2);
+    const MESSAGES = {
+      en: {
+        loadSvgFail: (url) => `Can't load SVG. Check the file path: ${url}`,
+        notSvg: (url) => `The fetched response is not an SVG (maybe a 404 returned HTML). Check the path: ${url}`,
+        noPath: `SVG contains no <path> elements. Nothing to animate.`,
+        noFieldImg: `Couldn't find #fieldImg in the filter. Did something remove <defs>?`,
+        fetchFailed: (status, statusText, url) => `Fetch failed: ${status} ${statusText} (${url})`
+      },
+      pl: {
+        loadSvgFail: (url) => `Nie mogę wczytać SVG. Sprawdź ścieżkę do pliku: ${url}`,
+        notSvg: (url) => `Wczytana odpowiedź nie jest SVG (może 404 zwraca HTML). Sprawdź ścieżkę: ${url}`,
+        noPath: `SVG nie zawiera <path>. Nie mam czego animować.`,
+        noFieldImg: `Nie znalazłem #fieldImg w filtrze. Coś usunęło defs?`,
+        fetchFailed: (status, statusText, url) => `fetch failed: ${status} ${statusText} (${url})`
+      }
+    };
+
+    const t = (key, ...args) => {
+      const dict = MESSAGES[LANG] || MESSAGES.en;
+      const val = dict[key] ?? MESSAGES.en[key];
+      return typeof val === "function" ? val(...args) : val;
+    };
+
+    function showError(msg){
+      console.error(msg);
+      errBox.textContent = msg;
+      errBox.style.display = "block";
+    }
+
+    const SVG_URL = "./BB_logo_symbol_solo.svg";
+
+    let svgText = "";
+    try{
+      const res = await fetch(SVG_URL, { cache: "no-cache" });
+      if (!res.ok) throw new Error(t("fetchFailed", res.status, res.statusText, SVG_URL));
+      svgText = await res.text();
+    }catch(e){
+      console.error(e);
+      showError(t("loadSvgFail", SVG_URL));
+      return;
+    }
+
+    const doc = new DOMParser().parseFromString(svgText, "image/svg+xml");
+    const svg = doc.documentElement;
+
+    if (svg.nodeName.toLowerCase() !== "svg"){
+      showError(t("notSvg", SVG_URL));
+      return;
+    }
+
+    svg.setAttribute("id", "logo");
+    svg.style.overflow = "visible";
+    host.replaceChildren(svg);
+
+    if (!svg.getAttribute("viewBox")) {
+      const w = Number(svg.getAttribute("width")) || 1000;
+      const h = Number(svg.getAttribute("height")) || 1000;
+      svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    }
+    const [minX, minY, W, H] = svg.getAttribute("viewBox").split(/\s+/).map(Number);
+
+    const paths = [...svg.querySelectorAll("path")];
+    if (!paths.length){
+      showError(t("noPath"));
+      return;
+    }
+
+    await new Promise(requestAnimationFrame);
+
+    const NS = "http://www.w3.org/2000/svg";
+    const defs = document.createElementNS(NS, "defs");
+    const PAD = 120;
+    defs.innerHTML = `
+      <filter id="repel"
+        x="${minX - PAD}" y="${minY - PAD}"
+        width="${W + PAD*2}" height="${H + PAD*2}"
+        filterUnits="userSpaceOnUse">
+        <feImage id="fieldImg"
+          x="${minX - PAD}" y="${minY - PAD}"
+          width="${W + PAD*2}" height="${H + PAD*2}"
+          href="" result="field"/>
+        <feDisplacementMap in="SourceGraphic" in2="field" scale="30"
+          xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    `;
+    svg.insertBefore(defs, svg.firstChild);
+
+    const FX = minX - PAD, FY = minY - PAD;
+    const FW = W + PAD*2, FH = H + PAD*2;
+
+    const fieldImg = svg.querySelector("#fieldImg");
+    if (!fieldImg){
+      showError(t("noFieldImg"));
+      return;
+    }
+
+    for (const p of paths) {
+      p.setAttribute("filter", "url(#repel)");
+      const fill = p.getAttribute("fill");
+      if (!fill || fill === "#000" || fill === "black") {
+        p.setAttribute("fill", "currentColor");
+      }
+    }
+
+    const CW = 256, CH = 256;
+    const canvas = document.createElement("canvas");
+    canvas.width = CW; canvas.height = CH;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+    const mouse = {
+      x: minX + W/2, y: minY + H/2,
+      tx: minX + W/2, ty: minY + H/2,
+      active: false
+    };
+    let effect = 0;
+
+    function svgPointFromClient(clientX, clientY) {
+      const pt = svg.createSVGPoint();
+      pt.x = clientX; pt.y = clientY;
+      const m = svg.getScreenCTM();
+      return m ? pt.matrixTransform(m.inverse()) : { x: minX + W/2, y: minY + H/2 };
+    }
+
+    svg.addEventListener("pointermove", (e) => {
+      const p = svgPointFromClient(e.clientX, e.clientY);
+      mouse.tx = p.x; mouse.ty = p.y;
+      mouse.active = true;
+    });
+    svg.addEventListener("pointerleave", () => { mouse.active = false; });
+
+    const radius = 140;
+    const strength = 80;
+    const follow = 0.18;
+    const fade = 0.12;
+
+    function setFeImageHref(value){
+      fieldImg.setAttribute("href", value);
+      fieldImg.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", value);
+    }
+
+    function drawField() {
+      if (mouse.active) {
+        mouse.x += (mouse.tx - mouse.x) * follow;
+        mouse.y += (mouse.ty - mouse.y) * follow;
+      }
+
+      const target = mouse.active ? 1 : 0;
+      effect += (target - effect) * fade;
+      const localStrength = strength * effect;
+
+      const img = ctx.createImageData(CW, CH);
+      const data = img.data;
+
+      for (let y = 0; y < CH; y++) {
+        for (let x = 0; x < CW; x++) {
+          const i = (y * CW + x) * 4;
+
+          const sx = FX + (x + 0.5) * (FW / CW);
+          const sy = FY + (y + 0.5) * (FH / CH);
+
+          const dx = sx - mouse.x;
+          const dy = sy - mouse.y;
+          const dist = Math.hypot(dx, dy) || 1;
+
+          let r = 128, g = 128;
+
+          if (localStrength > 0.001 && dist < radius) {
+            const t = 1 - (dist / radius);
+            const f = t * t;
+            const nx = dx / dist;
+            const ny = dy / dist;
+            r = 128 + nx * localStrength * f;
+            g = 128 + ny * localStrength * f;
+          }
+
+          data[i]   = r < 0 ? 0 : (r > 255 ? 255 : r);
+          data[i+1] = g < 0 ? 0 : (g > 255 ? 255 : g);
+          data[i+2] = 128;
+          data[i+3] = 255;
+        }
+      }
+
+      ctx.putImageData(img, 0, 0);
+      setFeImageHref(canvas.toDataURL("image/png"));
+    }
+
+    function tick(){
+      drawField();
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  })();
+  </script>
+</body>
+</html>
